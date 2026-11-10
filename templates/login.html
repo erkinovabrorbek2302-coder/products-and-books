@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Kirish{% endblock %}
+{% block content %}
+<section class="phead authwrap" data-net>
+  <div class="auth">
+    <h1>Hisobingizga kiring</h1>
+    <p class="muted">Login va parolingizni kiriting.</p>
+    <form class="form-card" method="post">
+      {% csrf_token %}
+      {% if request.method == 'POST' %}<div class="alert error">Login yoki parol noto'g'ri. Qayta urinib ko'ring.</div>{% endif %}
+      <div class="field">
+        <label for="username">Login</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Parol</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-block" type="submit">Kirish</button>
+      <div class="or">Hisobingiz yo'qmi?</div>
+      <a class="btn btn-ghost btn-block" href="{% url 'myapp:signup' %}">Ro'yxatdan o'tish</a>
+    </form>
+    <div style="text-align:center;margin-top:1.25rem">
+      <button type="button" class="chip js-theme"><span class="js-theme-label">Tungi rejim</span></button>
+    </div>
+  </div>
+</section>
+{% endblock %}

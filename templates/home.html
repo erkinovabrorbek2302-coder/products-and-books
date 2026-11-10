@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% block title %}Bosh sahifa{% endblock %}
+{% block content %}
+<style>
+  .stage{position:relative;overflow:hidden;isolation:isolate;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:clamp(2rem,6vw,4.5rem) clamp(1.25rem,4vw,3rem)}
+  #net{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+  .stage>*:not(canvas){animation:up .7s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0) * 90ms)}
+  @keyframes up{from{opacity:0;transform:translateY(16px)}}
+  .hello{color:var(--muted);font-weight:500}
+  .hello b{color:var(--ink)}
+  .stage h1{font-size:clamp(2.4rem,6.5vw,4.6rem);font-weight:800;max-width:15ch;margin:.5rem 0 1.6rem}
+  .stage form{display:flex;gap:.5rem;max-width:560px}
+  .stage input{padding-block:.95rem;background:var(--bg)}
+  .stage .btn{padding-block:.95rem}
+  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1.25rem;margin-top:1.25rem}
+  .when{color:var(--muted);font-size:.92rem;font-variant-numeric:tabular-nums}
+
+  .tick{margin:1.5rem 0 0;overflow:hidden;border-block:1px solid var(--line);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .tick-track{display:flex;width:max-content;animation:slide 40s linear infinite}
+  .tick:hover .tick-track{animation-play-state:paused}
+  .tick a{display:flex;align-items:center;padding:.95rem 0 .95rem 1.4rem;font:600 1.05rem var(--display);white-space:nowrap}
+  .tick a::after{content:"";width:7px;height:7px;margin-left:1.4rem;background:var(--accent);border-radius:2px}
+  .tick a:hover{text-decoration:underline;text-underline-offset:4px}
+  @keyframes slide{to{transform:translateX(-50%)}}
+
+  .bento{display:grid;grid-template-columns:1.6fr 1fr;gap:1rem;margin-top:1rem}
+  .tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:1rem;padding:1.6rem;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;transition:border-color .25s;animation:up .7s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0) * 90ms + .35s)}
+  .tile::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(300px circle at var(--mx,50%) var(--my,50%),var(--hover),transparent 70%)}
+  .tile:hover{border-color:var(--ink)}
+  .tile:hover::after{opacity:1}
+  .feat{grid-row:span 3;min-height:360px;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .15s,border-color .25s}
+  .feat h2{font-size:clamp(1.9rem,3.6vw,2.8rem);margin:1rem 0 .5rem}
+  .feat .sub{font-weight:500}
+  .feat .ex{color:var(--muted);max-width:52ch;margin-top:.5rem}
+  .go{margin-left:auto;font-weight:600}
+  .feat:hover .go{text-decoration:underline;text-underline-offset:4px}
+  .num .top{display:flex;justify-content:space-between;align-items:center;font:700 1.1rem var(--display)}
+  .num .i{transition:transform .3s}
+  .num:hover .i{transform:translate(4px,-4px)}
+  .num b{font:800 clamp(2.6rem,5vw,3.8rem) var(--display);line-height:1}
+  .q{color:var(--muted);font-size:.9rem;line-height:1.5}
+  .q small{display:block;margin-top:.25rem;color:var(--ink);font-weight:500}
+
+  .sec{display:flex;justify-content:space-between;align-items:baseline;margin:3rem 0 1rem}
+  .sec h2{font-size:1.7rem}
+  .sec a{color:var(--muted);font-weight:500}
+  .sec a:hover{color:var(--ink)}
+  .strip{display:flex;gap:1rem;overflow-x:auto;padding-bottom:1rem;cursor:grab;scroll-snap-type:x proximity;scrollbar-width:thin}
+  .strip.drag{cursor:grabbing;scroll-snap-type:none}
+  .strip a{-webkit-user-drag:none;user-select:none}
+  .pmini{flex:none;width:200px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;transition:transform .3s,border-color .2s}
+  .pmini:hover{transform:translateY(-5px);border-color:var(--ink)}
+  .pmini .pimg{font-size:3.2rem}
+  .pb{display:flex;flex-direction:column;align-items:flex-start;gap:.4rem;padding:.8rem .9rem 1rem}
+  .pb h3{font-size:1rem}
+
+  @media(max-width:760px){
+    .bento{grid-template-columns:1fr}
+    .feat{grid-row:auto;min-height:260px}
+    .stage form{flex-direction:column}
+  }
+</style>
+
+<section class="stage">
+  <canvas id="net" aria-hidden="true"></canvas>
+  <p class="hello" style="--i:0"><span id="hi">Salom</span>, <b>{{ user.username }}</b></p>
+  <h1 style="--i:1">Bugun nimani o'qiymiz?</h1>
+  <form style="--i:2" action="{% url 'myapp:maqola_search' %}" method="get">
+    <input id="q" type="search" name="nom" placeholder="Maqola nomini yozing" autocomplete="off" aria-label="Maqola qidirish">
+    <button class="btn" type="submit">Qidirish</button>
+  </form>
+  <div class="acts" style="--i:3">
+    {% if son_maqolalar %}<button type="button" class="btn btn-ghost" id="rnd">Tasodifiy maqola</button>{% endif %}
+    <span class="when" id="when"></span>
+  </div>
+</section>
+
+{% if son_maqolalar %}
+<div class="tick" aria-label="So'nggi maqolalar">
+  <div class="tick-track">
+    {% for r in "1234" %}{% for m in son_maqolalar %}
+    <a href="{% url 'myapp:maqola_detail' m.pk %}" data-title="{{ m.nom }}">{{ m.nom }}</a>
+    {% endfor %}{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<section class="bento">
+  {% with f=son_maqolalar.0 %}
+  {% if f %}
+  <a class="tile feat" style="--i:1" href="{% url 'myapp:maqola_detail' f.pk %}">
+    <span class="badge" style="align-self:flex-start">Eng so'nggi maqola</span>
+    <div>
+      <h2>{{ f.nom }}</h2>
+      <p class="sub">{{ f.sarlavha }}</p>
+      <p class="ex">{{ f.tavsif|truncatewords:34 }}</p>
+    </div>
+    <div class="meta"><span>{{ f.muallifi }}</span><span>{{ f.yangilangan|date:"d.m.Y" }}</span><span class="go">O'qish</span></div>
+  </a>
+  {% else %}
+  <div class="tile feat" style="--i:1">
+    <h2>Hozircha maqola yo'q</h2>
+    <p class="ex">Admin paneldan birinchi maqolani qo'shing.</p>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <a class="tile num" style="--i:2" href="{% url 'myapp:maqola_list' %}">
+    <div class="top"><span>Maqolalar</span><svg class="i" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></svg></div>
+    <b data-count="{{ maqolalar_soni }}">{{ maqolalar_soni }}</b>
+  </a>
+  <a class="tile num" style="--i:3" href="{% url 'myapp:mahsulot_list' %}">
+    <div class="top"><span>Mahsulotlar</span><svg class="i" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></svg></div>
+    <b data-count="{{ mahsulotlar_soni }}">{{ mahsulotlar_soni }}</b>
+  </a>
+  <a class="tile num" style="--i:4" href="{% url 'myapp:izohlar_list' %}">
+    <div class="top"><span>Izohlar</span><svg class="i" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></svg></div>
+    {% if son_izoh %}<p class="q">"{{ son_izoh.body|truncatechars:64 }}"<small>{{ son_izoh.name }}</small></p>{% endif %}
+    <b data-count="{{ izohlar_soni }}">{{ izohlar_soni }}</b>
+  </a>
+</section>
+
+{% if son_mahsulotlar %}
+<div class="sec"><h2>Mahsulotlar</h2><a href="{% url 'myapp:mahsulot_list' %}">Hammasi</a></div>
+<div class="strip" id="strip">
+  {% for m in son_mahsulotlar %}
+  <a class="pmini" href="{% url 'myapp:mahsulot_detail' m.pk %}">
+    <div class="pimg">{% if m.surat %}<img src="{{ m.surat.url }}" alt="{{ m.nom }}" loading="lazy" draggable="false">{% else %}{{ m.nom|first|upper }}{% endif %}</div>
+    <div class="pb"><h3>{{ m.nom }}</h3><span class="price">{{ m.narx|floatformat:0 }} so'm</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Salomlashish va vaqt
+  var D = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+  var M = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+  var hi = document.getElementById('hi'), when = document.getElementById('when');
+  function clock() {
+    var n = new Date(), h = n.getHours();
+    hi.textContent = h < 5 ? 'Xayrli tun' : h < 12 ? 'Xayrli tong' : h < 18 ? 'Xayrli kun' : 'Xayrli kech';
+    when.textContent = D[n.getDay()] + ', ' + n.getDate() + ' ' + M[n.getMonth()] + ', ' +
+      ('0' + h).slice(-2) + ':' + ('0' + n.getMinutes()).slice(-2);
+  }
+  clock(); setInterval(clock, 20000);
+
+  // Tasodifiy maqola
+  var urls = [{% for m in son_maqolalar %}"{% url 'myapp:maqola_detail' m.pk %}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  var rnd = document.getElementById('rnd');
+  if (rnd) rnd.onclick = function () { location.href = urls[Math.floor(Math.random() * urls.length)]; };
+
+  // Qidiruv maydonida maqola nomlari yozilib turadi
+  var inp = document.getElementById('q');
+  var names = [].map.call(document.querySelectorAll('[data-title]'), function (e) { return e.dataset.title; })
+    .filter(function (v, i, a) { return a.indexOf(v) === i; });
+  if (!names.length) names = ['Maqola nomini yozing'];
+  if (!calm) {
+    var ni = 0, ci = 0, del = false;
+    (function step() {
+      if (document.activeElement === inp || inp.value) { setTimeout(step, 500); return; }
+      var w = names[ni], wait = del ? 35 : 75;
+      ci += del ? -1 : 1;
+      inp.placeholder = w.slice(0, ci) + '\u258F';
+      if (!del && ci === w.length) { del = true; wait = 1500; }
+      else if (del && ci === 0) { del = false; ni = (ni + 1) % names.length; wait = 350; }
+      setTimeout(step, wait);
+    })();
+  }
+
+  // Nuqtalar tarmog'i: kursorga ergashadi
+  var c = document.getElementById('net'), st = c.parentNode, x = c.getContext('2d');
+  var W, H, P = [], m = { x: -999, y: -999 }, ink = '#000', acc = '#f2b134', run = false;
+  function colors() {
+    var s = getComputedStyle(document.documentElement);
+    ink = s.getPropertyValue('--ink').trim() || '#000';
+    acc = s.getPropertyValue('--accent').trim() || '#f2b134';
+    if (calm) draw();
+  }
+  function size() {
+    var r = Math.min(devicePixelRatio || 1, 2);
+    W = st.clientWidth; H = st.clientHeight;
+    c.width = W * r; c.height = H * r;
+    x.setTransform(r, 0, 0, r, 0, 0);
+    var n = Math.round(Math.min(80, W * H / 12000));
+    P = [];
+    for (var i = 0; i < n; i++) P.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35 });
+    if (calm) draw();
+  }
+  function draw() {
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = ink; x.strokeStyle = ink; x.lineWidth = 1;
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i];
+      if (!calm) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+      }
+      x.globalAlpha = .45;
+      x.beginPath(); x.arc(p.x, p.y, 1.7, 0, 6.283); x.fill();
+      for (var j = i + 1; j < P.length; j++) {
+        var q = P[j], d = Math.hypot(p.x - q.x, p.y - q.y);
+        if (d < 110) {
+          x.globalAlpha = (1 - d / 110) * .22;
+          x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(q.x, q.y); x.stroke();
+        }
+      }
+    }
+    x.strokeStyle = acc; x.fillStyle = acc;
+    for (var k = 0; k < P.length; k++) {
+      var a = P[k], dm = Math.hypot(a.x - m.x, a.y - m.y);
+      if (dm < 170) {
+        x.globalAlpha = (1 - dm / 170) * .9;
+        x.lineWidth = 1.4;
+        x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(m.x, m.y); x.stroke();
+        x.beginPath(); x.arc(a.x, a.y, 2.6, 0, 6.283); x.fill();
+      }
+    }
+  }
+  function loop() { if (!run) return; draw(); requestAnimationFrame(loop); }
+  st.addEventListener('pointermove', function (e) {
+    var r = st.getBoundingClientRect(); m.x = e.clientX - r.left; m.y = e.clientY - r.top;
+  });
+  st.addEventListener('pointerleave', function () { m.x = m.y = -999; });
+  new ResizeObserver(size).observe(st);
+  new MutationObserver(colors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  colors(); size();
+  if (!calm) new IntersectionObserver(function (e) { run = e[0].isIntersecting; if (run) loop(); }).observe(st);
+
+  // Kartalar: kursor yorug'ligi va 3D qiyshayish
+  document.querySelectorAll('.tile').forEach(function (t) {
+    t.addEventListener('pointermove', function (e) {
+      var r = t.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      t.style.setProperty('--mx', px * 100 + '%'); t.style.setProperty('--my', py * 100 + '%');
+      if (!calm && t.classList.contains('feat')) {
+        t.style.setProperty('--ry', (px - .5) * 8 + 'deg'); t.style.setProperty('--rx', (.5 - py) * 8 + 'deg');
+      }
+    });
+    t.addEventListener('pointerleave', function () { t.style.setProperty('--rx', '0deg'); t.style.setProperty('--ry', '0deg'); });
+  });
+
+  // Mahsulotlar tasmasini sichqoncha bilan sudrash
+  var s = document.getElementById('strip');
+  if (s) {
+    var down = false, sx = 0, sl = 0, moved = 0;
+    s.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'touch') return;
+      down = true; moved = 0; sx = e.clientX; sl = s.scrollLeft;
+    });
+    addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var dx = e.clientX - sx; moved = Math.max(moved, Math.abs(dx));
+      if (moved > 5) s.classList.add('drag');
+      s.scrollLeft = sl - dx;
+    });
+    addEventListener('pointerup', function () { down = false; s.classList.remove('drag'); });
+    s.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    s.addEventListener('click', function (e) { if (moved > 5) { e.preventDefault(); e.stopPropagation(); moved = 0; } }, true);
+  }
+})();
+</script>
+{% endblock %}

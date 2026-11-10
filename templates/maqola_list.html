@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Maqolalar{% endblock %}
+{% block content %}
+<section class="phead" data-net>
+  <p class="kick">Jami {{ maqolalar|length }} ta maqola</p>
+  <h1>Maqolalar</h1>
+  <form action="{% url 'myapp:maqola_search' %}" method="get">
+    <input type="search" name="nom" data-typed placeholder="Maqola nomi" autocomplete="off" aria-label="Maqola qidirish">
+    <button class="btn" type="submit">Qidirish</button>
+  </form>
+</section>
+
+{% if maqolalar %}
+<div class="rows">
+  {% for m in maqolalar %}
+  <a class="row glow" data-title="{{ m.nom }}" href="{% url 'myapp:maqola_detail' m.pk %}">
+    <div>
+      <h3>{{ m.nom }}</h3>
+      <p class="sub">{{ m.sarlavha }}</p>
+      <p>{{ m.tavsif|truncatewords:24 }}</p>
+    </div>
+    <div class="meta">
+      <span class="badge{% if m.holat != 'chop_etilgan' %} off{% endif %}">{{ m.get_holat_display }}</span>
+      <span>{{ m.muallifi }}</span>
+      <span>{{ m.yangilangan|date:"d.m.Y" }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Hozircha maqola yo'q. Admin paneldan birinchi maqolani qo'shing.</div>
+{% endif %}
+{% endblock %}

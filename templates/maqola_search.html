@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Qidiruv{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'myapp:maqola_list' %}">Barcha maqolalar</a>
+<section class="phead" data-net>
+  <p class="kick">{{ natijalar|length }} ta maqola topildi</p>
+  <h1>{% if qidiruv %}"{{ qidiruv }}"{% else %}Qidiruv{% endif %}</h1>
+  <form method="get">
+    <input type="search" name="nom" value="{{ qidiruv }}" data-typed placeholder="Maqola nomi" autocomplete="off" aria-label="Maqola qidirish">
+    <button class="btn" type="submit">Qidirish</button>
+  </form>
+</section>
+
+{% if natijalar %}
+<div class="rows">
+  {% for m in natijalar %}
+  <a class="row glow" data-title="{{ m.nom }}" href="{% url 'myapp:maqola_detail' m.pk %}">
+    <div>
+      <h3>{{ m.nom }}</h3>
+      <p class="sub">{{ m.sarlavha }}</p>
+      <p>{{ m.tavsif|truncatewords:24 }}</p>
+    </div>
+    <div class="meta">
+      <span class="badge{% if m.holat != 'chop_etilgan' %} off{% endif %}">{{ m.get_holat_display }}</span>
+      <span>{{ m.muallifi }}</span>
+      <span>{{ m.yangilangan|date:"d.m.Y" }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <p>Bu nom bilan maqola topilmadi. Boshqa so'z bilan urinib ko'ring.</p>
+  <a class="btn btn-ghost" href="{% url 'myapp:maqola_list' %}">Barcha maqolalar</a>
+</div>
+{% endif %}
+{% endblock %}

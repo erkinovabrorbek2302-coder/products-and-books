@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Izohlar{% endblock %}
+{% block content %}
+<section class="phead" data-net>
+  <p class="kick">Faol izohlar: {{ izohlar|length }} ta</p>
+  <h1>Izohlar</h1>
+</section>
+
+<div class="narrow">
+  {% for i in izohlar %}
+  <div class="comment glow">
+    <div class="avatar">{{ i.name|first|upper }}</div>
+    <div>
+      <b>{{ i.name }}</b><time>{{ i.created|timesince }} oldin</time>
+      {% if i.maqola %}<div class="meta"><a href="{% url 'myapp:maqola_detail' i.maqola.pk %}">{{ i.maqola.nom }}</a></div>{% endif %}
+      <p>{{ i.body|linebreaksbr }}</p>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty">Hozircha izoh yo'q. Izoh qoldirish uchun biror maqolani oching.</div>
+  {% endfor %}
+</div>
+{% endblock %}

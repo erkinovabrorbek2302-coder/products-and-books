@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Maqolani ulashish{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'myapp:maqola_detail' post.pk %}">Maqolaga qaytish</a>
+<section class="phead" data-net>
+  <p class="kick">Maqolani ulashish</p>
+  <h1>Do'stingizga yuboring</h1>
+  <p class="lead" style="margin-bottom:0">"{{ post.sarlavha }}" maqolasini elektron pochta orqali ulashing.</p>
+</section>
+
+<div class="narrow">
+  {% if sent %}
+    <div class="alert ok">Xabar yuborildi.</div>
+    <a class="btn" href="{% url 'myapp:maqola_detail' post.pk %}">Maqolaga qaytish</a>
+  {% else %}
+    <form class="form-card" method="post" novalidate style="margin-top:0">
+      {% csrf_token %}
+      {% for e in form.non_field_errors %}<div class="alert error">{{ e }}</div>{% endfor %}
+      {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <button class="btn" type="submit">Xabarni yuborish</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

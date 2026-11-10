@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Ro'yxatdan o'tish{% endblock %}
+{% block content %}
+<section class="phead authwrap" data-net>
+  <div class="auth">
+    <h1>Hisob yarating</h1>
+    <p class="muted">Izoh qoldirish va maqolalarni ulashish uchun ro'yxatdan o'ting.</p>
+    <form class="form-card" method="post" novalidate>
+      {% csrf_token %}
+      {% for e in form.non_field_errors %}<div class="alert error">{{ e }}</div>{% endfor %}
+      {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<small>{{ field.help_text|safe }}</small>{% endif %}
+        {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <button class="btn btn-block" type="submit">Hisob yaratish</button>
+      <div class="or">Hisobingiz bormi?</div>
+      <a class="btn btn-ghost btn-block" href="{% url 'myapp:login_page' %}">Kirish</a>
+    </form>
+    <div style="text-align:center;margin-top:1.25rem">
+      <button type="button" class="chip js-theme"><span class="js-theme-label">Tungi rejim</span></button>
+    </div>
+  </div>
+</section>
+{% endblock %}

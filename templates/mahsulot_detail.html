@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{ mahsulot.nom }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'myapp:mahsulot_list' %}">Barcha mahsulotlar</a>
+<div class="detail">
+  <div class="pimg tilt glow">{% if mahsulot.surat %}<img src="{{ mahsulot.surat.url }}" alt="{{ mahsulot.nom }}">{% else %}{{ mahsulot.nom|first|upper }}{% endif %}</div>
+  <div>
+    <span class="badge{% if mahsulot.holat != 'mavjud' %} off{% endif %}">{% if mahsulot.holat == 'mavjud' %}Mavjud{% else %}Mavjud emas{% endif %}</span>
+    <h1>{{ mahsulot.nom }}</h1>
+    <span class="price lg">{{ mahsulot.narx|floatformat:0 }} so'm</span>
+    <dl class="specs">
+      <dt>Brend</dt><dd>{{ mahsulot.brend }}</dd>
+      <dt>Ishlab chiqarilgan</dt><dd>{{ mahsulot.ishlab_chiqarilgan|capfirst }}</dd>
+      <dt>Yaroqlilik muddati</dt><dd>{{ mahsulot.yaroqlilik }}</dd>
+      <dt>Omborda</dt><dd>{{ mahsulot.miqdor }} dona</dd>
+    </dl>
+    <h3>Tavsif</h3>
+    <p>{{ mahsulot.tavsif|linebreaksbr }}</p>
+    <h3>Tarkibi</h3>
+    <p>{{ mahsulot.tarkibi|linebreaksbr }}</p>
+    <button class="btn btn-ghost" id="copy" type="button" style="margin-top:1.5rem">Havolani nusxalash</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var b = document.getElementById('copy');
+  b.onclick = function () {
+    var done = function () { b.textContent = 'Nusxalandi'; setTimeout(function () { b.textContent = 'Havolani nusxalash'; }, 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done);
+    else done();
+  };
+})();
+</script>
+{% endblock %}

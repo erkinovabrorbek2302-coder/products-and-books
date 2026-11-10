@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Mahsulotlar{% endblock %}
+{% block content %}
+<section class="phead" data-net>
+  <p class="kick">Jami {{ mahsulotlar|length }} ta mahsulot</p>
+  <h1>Mahsulotlar</h1>
+  <form onsubmit="return false">
+    <input type="search" id="productFilter" data-typed placeholder="Mahsulot nomi" autocomplete="off" aria-label="Mahsulotni filtrlash">
+  </form>
+  <div class="tools">
+    <button type="button" class="chip on" data-filter="all">Barchasi</button>
+    <button type="button" class="chip" data-filter="ok">Mavjud</button>
+    <i></i>
+    <button type="button" class="chip on" data-sort="new">Yangi</button>
+    <button type="button" class="chip" data-sort="asc">Arzonroq</button>
+    <button type="button" class="chip" data-sort="desc">Qimmatroq</button>
+  </div>
+</section>
+
+{% if mahsulotlar %}
+<div class="grid" id="grid">
+  {% for m in mahsulotlar %}
+  <a class="pcard tilt glow" data-title="{{ m.nom }}" data-name="{{ m.nom|lower }}" data-price="{{ m.narx|stringformat:'f' }}" data-ok="{% if m.holat == 'mavjud' %}1{% else %}0{% endif %}" data-i="{{ forloop.counter }}" href="{% url 'myapp:mahsulot_detail' m.pk %}">
+    <div class="pimg">{% if m.surat %}<img src="{{ m.surat.url }}" alt="{{ m.nom }}" loading="lazy">{% else %}{{ m.nom|first|upper }}{% endif %}</div>
+    <div class="pbody">
+      <h3>{{ m.nom }}</h3>
+      <div class="meta">
+        <span class="badge{% if m.holat != 'mavjud' %} off{% endif %}">{% if m.holat == 'mavjud' %}Mavjud{% else %}Mavjud emas{% endif %}</span>
+      </div>
+      <span class="price">{{ m.narx|floatformat:0 }} so'm</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+<div class="empty" id="noResults" hidden>Hech narsa topilmadi. Filtrni o'zgartirib ko'ring.</div>
+
+<script>
+(function () {
+  var grid = document.getElementById('grid');
+  var cards = [].slice.call(grid.children);
+  var q = document.getElementById('productFilter');
+  var none = document.getElementById('noResults');
+  var f = 'all', s = 'new';
+
+  function apply() {
+    var t = q.value.trim().toLowerCase(), n = 0;
+    cards.sort(function (a, b) {
+      if (s === 'asc') return a.dataset.price - b.dataset.price;
+      if (s === 'desc') return b.dataset.price - a.dataset.price;
+      return a.dataset.i - b.dataset.i;
+    }).forEach(function (c) {
+      var ok = c.dataset.name.indexOf(t) !== -1 && (f === 'all' || c.dataset.ok === '1');
+      c.hidden = !ok;
+      if (ok) n++;
+      grid.appendChild(c);
+    });
+    none.hidden = n > 0;
+  }
+  function group(sel, key, set) {
+    document.querySelectorAll(sel).forEach(function (b) {
+      b.addEventListener('click', function () {
+        set(b.dataset[key]);
+        document.querySelectorAll(sel).forEach(function (x) { x.classList.toggle('on', x === b); });
+        apply();
+      });
+    });
+  }
+  group('[data-filter]', 'filter', function (v) { f = v; });
+  group('[data-sort]', 'sort', function (v) { s = v; });
+  q.addEventListener('input', apply);
+})();
+</script>
+{% else %}
+<div class="empty">Hozircha mahsulot yo'q. Admin paneldan birinchi mahsulotni qo'shing.</div>
+{% endif %}
+{% endblock %}
